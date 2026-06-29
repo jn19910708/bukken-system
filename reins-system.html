@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物件情報システム</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1b2a4a;--blue:#1e5fa8;--blue2:#2d7dd2;
+  --gold:#b8860b;--gold2:#d4a017;
+  --bg:#f0f2f5;--bg2:#e4e8ef;--white:#fff;
+  --border:#cdd3de;--text:#1a1a1a;--text2:#4a5568;--text3:#8a97a8;
+  --red:#c0392b;--green:#1a7a4a;
+}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+
+/* HEADER */
+#header{background:var(--navy);height:50px;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.25)}
+.logo{color:#fff;font-size:14px;font-weight:700;letter-spacing:0.06em;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.logo-bar{width:4px;height:18px;background:linear-gradient(to bottom,var(--gold2),var(--gold));border-radius:2px}
+.nav-tabs{display:flex;gap:3px;flex:1;justify-content:flex-end}
+.nav-tab{padding:6px 14px;border:none;background:transparent;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;border-radius:4px;font-family:inherit;transition:all 0.15s;white-space:nowrap}
+.nav-tab:hover{background:rgba(255,255,255,0.08);color:#fff}
+.nav-tab.active{background:var(--blue);color:#fff;font-weight:600}
+.badge{display:inline-flex;align-items:center;justify-content:center;background:var(--gold);color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;padding:0 4px;margin-left:4px}
+
+/* LAYOUT */
+#app{max-width:1000px;margin:0 auto;padding:16px 12px 60px}
+.page{display:none}.page.active{display:block}
+
+/* SEC HEADER */
+.sec-header{display:flex;align-items:center;margin-bottom:12px}
+.sec-title{font-size:16px;font-weight:700;color:var(--navy)}
+.btn-primary{margin-left:auto;background:var(--blue);color:#fff;border:none;padding:8px 16px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-primary:hover{background:var(--blue2)}
+.btn-primary.green{background:#2d6a2d}.btn-primary.green:hover{background:#3a8a3a}
+.btn-secondary{background:var(--white);color:var(--text2);border:1px solid var(--border);padding:7px 14px;border-radius:5px;font-size:13px;cursor:pointer;font-family:inherit}
+.btn-danger{background:none;color:var(--red);border:1px solid #e8d0ce;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.data-table th{background:var(--navy);color:rgba(255,255,255,0.85);padding:9px 10px;text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;white-space:nowrap}
+.data-table td{padding:10px;border-bottom:1px solid var(--bg2);vertical-align:middle;font-size:12px}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tbody tr.clickable{cursor:pointer;transition:background 0.1s}
+.data-table tbody tr.clickable:hover{background:#f0f5ff}
+.prop-name{font-weight:700;color:var(--navy);font-size:13px}
+.prop-price{font-weight:700;color:var(--blue);white-space:nowrap}
+.prop-yield{color:var(--green);font-weight:600}
+.prop-date{color:var(--text3);font-size:11px;white-space:nowrap}
+.tag{background:#e8f0fb;color:var(--blue);font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;display:inline-block;margin:1px}
+.tag.green{background:#e6f4ee;color:var(--green)}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--text3);background:var(--white);border-radius:8px;border:1.5px dashed var(--border)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-title{font-size:14px;color:var(--text2);margin-bottom:4px}
+.empty-sub{font-size:12px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,25,50,0.6);z-index:200;align-items:center;justify-content:center;padding:12px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:10px;width:100%;max-width:600px;max-height:92vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,0.3);animation:slideUp 0.2s ease}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{background:var(--navy);padding:14px 18px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:10px}
+.modal-header.green{background:#2d4a2d}
+.modal-title{color:#fff;font-size:14px;font-weight:700;flex:1}
+.modal-close{background:rgba(255,255,255,0.15);border:none;color:#fff;width:28px;height:28px;border-radius:14px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-body{padding:16px}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--bg2);display:flex;gap:8px;justify-content:flex-end}
+
+/* DETAIL MODAL */
+.detail-header{background:var(--navy);padding:18px 20px;border-radius:10px 10px 0 0;text-align:center;position:relative}
+.detail-label{color:var(--gold2);font-size:10px;letter-spacing:0.2em;margin-bottom:5px}
+.detail-name{color:#fff;font-size:18px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.detail-price{color:var(--gold2);font-size:22px;font-weight:700}
+.detail-yield{color:#a8d4b8;font-size:13px;margin-left:8px}
+.detail-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.15);border:none;color:#fff;width:28px;height:28px;border-radius:14px;cursor:pointer;font-size:16px}
+.detail-table{width:100%;border-collapse:collapse}
+.detail-table tr{border-bottom:1px solid var(--bg2)}
+.detail-table tr:last-child{border-bottom:none}
+.detail-table td:first-child{padding:9px 12px 9px 0;font-weight:700;color:var(--navy);width:30%;white-space:nowrap;vertical-align:top;font-size:12px}
+.detail-table td:last-child{padding:9px 0;color:var(--text);font-size:12px;line-height:1.6}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:11px;font-weight:700;color:var(--navy)}
+.form-input,.form-select,.form-textarea{border:1px solid var(--border);border-radius:5px;padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text);background:#fafbfc;outline:none;transition:border-color 0.15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);background:#fff}
+.form-textarea{resize:vertical;min-height:60px}
+
+/* HINT BOX */
+.hint-box{background:#f0f5ff;border:1px solid #b3d0f7;border-radius:6px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;line-height:1.6}
+.hint-box strong{display:block;margin-bottom:3px;font-size:13px}
+
+@media(max-width:600px){
+  .form-grid{grid-template-columns:1fr}
+  .data-table th:nth-child(n+4),.data-table td:nth-child(n+4){display:none}
+  .logo{font-size:13px}
+  .nav-tab{padding:5px 10px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="logo"><div class="logo-bar"></div>物件情報システム</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('properties',this)">物件 <span class="badge" id="prop-badge">0</span></button>
+    <button class="nav-tab" onclick="showPage('needs',this)">物件リクエスト <span class="badge" id="needs-badge">0</span></button>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- PROPERTIES -->
+  <div class="page active" id="page-properties">
+    <div class="sec-header">
+      <div class="sec-title">物件情報一覧</div>
+      <button class="btn-primary" onclick="openModal('modal-prop-form')">＋ 物件を登録</button>
+    </div>
+    <div id="prop-list-wrap">
+      <div class="empty"><div class="empty-icon">🏢</div><div class="empty-title">物件が登録されていません</div><div class="empty-sub">「＋ 物件を登録」から入力してください</div></div>
+    </div>
+  </div>
+
+  <!-- NEEDS -->
+  <div class="page" id="page-needs">
+    <div class="sec-header">
+      <div class="sec-title">物件リクエスト一覧</div>
+      <button class="btn-primary green" onclick="openModal('modal-needs-form')">＋ リクエストを登録</button>
+    </div>
+    <div id="needs-list-wrap">
+      <div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">物件リクエストが登録されていません</div><div class="empty-sub">「＋ リクエストを登録」から入力してください</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PROP FORM MODAL -->
+<div class="modal-overlay" id="modal-prop-form">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">物件を登録</div>
+      <button class="modal-close" onclick="closeModal('modal-prop-form')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="hint-box">
+        <strong>💡 AI抽出の使い方</strong>
+        このClaudeのチャットに物件概要書のPDF・画像をアップすると項目を抽出してくれます。その内容をここにコピペして登録してください。
+      </div>
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">物件名 *</label><input class="form-input" id="p-name" placeholder="例）東新富久町ビル"></div>
+        <div class="form-group full"><label class="form-label">所在地</label><input class="form-input" id="p-address" placeholder="例）東京都新宿区新富町1-1-1"></div>
+        <div class="form-group full"><label class="form-label">交通</label><input class="form-input" id="p-access" placeholder="例）東京メトロ有楽町線「新富町」駅 徒歩3分"></div>
+        <div class="form-group"><label class="form-label">価格</label><input class="form-input" id="p-price" placeholder="例）2億5,000万円"></div>
+        <div class="form-group"><label class="form-label">利回り</label><input class="form-input" id="p-yield" placeholder="例）5.8%"></div>
+        <div class="form-group"><label class="form-label">土地面積</label><input class="form-input" id="p-land" placeholder="例）120.5㎡"></div>
+        <div class="form-group"><label class="form-label">建物面積</label><input class="form-input" id="p-building" placeholder="例）320.8㎡"></div>
+        <div class="form-group"><label class="form-label">構造</label><input class="form-input" id="p-structure" placeholder="例）RC造 5階建"></div>
+        <div class="form-group"><label class="form-label">築年数</label><input class="form-input" id="p-age" placeholder="例）築28年"></div>
+        <div class="form-group"><label class="form-label">現況</label><input class="form-input" id="p-status" placeholder="例）満室稼働中"></div>
+        <div class="form-group"><label class="form-label">用途地域</label><input class="form-input" id="p-zone" placeholder="例）商業地域"></div>
+        <div class="form-group"><label class="form-label">建蔽率</label><input class="form-input" id="p-coverage" placeholder="例）80%"></div>
+        <div class="form-group"><label class="form-label">容積率</label><input class="form-input" id="p-floor" placeholder="例）400%"></div>
+        <div class="form-group"><label class="form-label">接道</label><input class="form-input" id="p-road" placeholder="例）南側6m公道"></div>
+        <div class="form-group"><label class="form-label">権利</label><input class="form-input" id="p-right" placeholder="例）所有権"></div>
+        <div class="form-group full"><label class="form-label">その他・備考</label><textarea class="form-textarea" id="p-note" placeholder="例）1Fテナント付、管理良好"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-prop-form')">キャンセル</button>
+      <button class="btn-primary" onclick="saveProperty()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROP DETAIL MODAL -->
+<div class="modal-overlay" id="modal-prop-detail">
+  <div class="modal">
+    <div class="detail-header">
+      <button class="detail-close" onclick="closeModal('modal-prop-detail')">×</button>
+      <div class="detail-label">物 件 概 要 書</div>
+      <div class="detail-name" id="detail-name"></div>
+      <div><span class="detail-price" id="detail-price"></span><span class="detail-yield" id="detail-yield"></span></div>
+    </div>
+    <div class="modal-body">
+      <table class="detail-table" id="detail-table"></table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-prop-detail')">閉じる</button>
+      <button class="btn-danger" id="detail-delete-btn">削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEEDS FORM MODAL -->
+<div class="modal-overlay" id="modal-needs-form">
+  <div class="modal">
+    <div class="modal-header green">
+      <div class="modal-title">物件リクエストを登録</div>
+      <button class="modal-close" onclick="closeModal('modal-needs-form')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">法人名 *</label><input class="form-input" id="n-client" placeholder="例）株式会社〇〇"></div>
+        <div class="form-group"><label class="form-label">連絡先</label><input class="form-input" id="n-contact" placeholder="例）03-1234-5678 / tanaka@example.com"></div>
+        <div class="form-group"><label class="form-label">担当者名</label><input class="form-input" id="n-staff" placeholder="例）鈴木 一郎"></div>
+        <div class="form-group"><label class="form-label">種別 *</label>
+          <select class="form-select" id="n-type">
+            <option value="">選択</option>
+            <option>収益ビル</option><option>区分マンション</option><option>一棟マンション</option>
+            <option>戸建</option><option>土地</option><option>店舗</option><option>その他</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">希望エリア</label><input class="form-input" id="n-area" placeholder="例）東京都中央区"></div>
+        <div class="form-group"><label class="form-label">価格帯（上限）</label><input class="form-input" id="n-price" placeholder="例）3億円以下"></div>
+        <div class="form-group"><label class="form-label">希望利回り</label><input class="form-input" id="n-yield" placeholder="例）5%以上"></div>
+        <div class="form-group"><label class="form-label">土地面積</label><input class="form-input" id="n-land" placeholder="例）100㎡以上"></div>
+        <div class="form-group"><label class="form-label">建物面積</label><input class="form-input" id="n-building" placeholder="例）200㎡以上"></div>
+        <div class="form-group"><label class="form-label">築年数</label><input class="form-input" id="n-age" placeholder="例）築30年以内"></div>
+        <div class="form-group"><label class="form-label">構造</label><input class="form-input" id="n-structure" placeholder="例）RC造"></div>
+        <div class="form-group full"><label class="form-label">その他希望条件</label><textarea class="form-textarea" id="n-note" placeholder="例）融資相談可、現況渡し可、1F路面店舗付き希望"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-needs-form')">キャンセル</button>
+      <button class="btn-primary green" onclick="saveNeeds()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let properties = [];
+let needs = [];
+
+const PROP_FIELDS = [
+  {id:'p-name',key:'物件名'},{id:'p-address',key:'所在地'},{id:'p-access',key:'交通'},
+  {id:'p-price',key:'価格'},{id:'p-yield',key:'利回り'},{id:'p-land',key:'土地面積'},
+  {id:'p-building',key:'建物面積'},{id:'p-structure',key:'構造'},{id:'p-age',key:'築年数'},
+  {id:'p-status',key:'現況'},{id:'p-zone',key:'用途地域'},{id:'p-coverage',key:'建蔽率'},
+  {id:'p-floor',key:'容積率'},{id:'p-road',key:'接道'},{id:'p-right',key:'権利'},
+  {id:'p-note',key:'備考'}
+];
+
+let isAdmin = false;
+
+function showPage(id, btn) {
+  if (id === 'needs' && !isAdmin) {
+    const pw = prompt('管理者パスワードを入力してください:');
+    if (pw === null) return;
+    if (pw !== '1234') { alert('パスワードが違います'); return; }
+    isAdmin = true;
+  }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// PROPERTY
+function saveProperty() {
+  const name = document.getElementById('p-name').value.trim();
+  if (!name) { alert('物件名を入力してください'); return; }
+  const data = {};
+  PROP_FIELDS.forEach(f => { data[f.key] = document.getElementById(f.id).value.trim(); });
+  properties.unshift({ id: Date.now().toString(), createdAt: new Date().toISOString(), data });
+  renderProperties();
+  updateBadges();
+  closeModal('modal-prop-form');
+  PROP_FIELDS.forEach(f => { document.getElementById(f.id).value = ''; });
+}
+
+function renderProperties() {
+  const wrap = document.getElementById('prop-list-wrap');
+  if (!properties.length) {
+    wrap.innerHTML = `<div class="empty"><div class="empty-icon">🏢</div><div class="empty-title">物件が登録されていません</div><div class="empty-sub">「＋ 物件を登録」から入力してください</div></div>`;
+    return;
+  }
+  wrap.innerHTML = `<table class="data-table"><thead><tr>
+    <th>物件名</th><th>所在地</th><th>価格</th><th>利回り</th><th>構造／築年</th><th>登録日</th><th></th>
+  </tr></thead><tbody>${properties.map(p=>`
+    <tr class="clickable" onclick="openDetail('${p.id}')">
+      <td><div class="prop-name">${esc(p.data['物件名']||'—')}</div></td>
+      <td>${esc(p.data['所在地']||'—')}</td>
+      <td><span class="prop-price">${esc(p.data['価格']||'—')}</span></td>
+      <td><span class="prop-yield">${esc(p.data['利回り']||'—')}</span></td>
+      <td>${esc(p.data['構造']||'')}${p.data['築年数']?' / '+p.data['築年数']:''}</td>
+      <td class="prop-date">${new Date(p.createdAt).toLocaleDateString('ja-JP')}</td>
+      <td style="text-align:right;color:var(--blue);font-size:18px">›</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function openDetail(id) {
+  const p = properties.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('detail-name').textContent = p.data['物件名'] || '—';
+  document.getElementById('detail-price').textContent = p.data['価格'] || '';
+  document.getElementById('detail-yield').textContent = p.data['利回り'] ? '利回り ' + p.data['利回り'] : '';
+  const skip = new Set(['物件名','価格','利回り']);
+  const rows = PROP_FIELDS.filter(f => !skip.has(f.key) && p.data[f.key])
+    .map(f => `<tr><td>${esc(f.key)}</td><td>${esc(p.data[f.key])}</td></tr>`).join('');
+  document.getElementById('detail-table').innerHTML = rows;
+  document.getElementById('detail-delete-btn').onclick = () => {
+    if (confirm('この物件を削除しますか？')) {
+      properties = properties.filter(x => x.id !== id);
+      renderProperties(); updateBadges(); closeModal('modal-prop-detail');
+    }
+  };
+  openModal('modal-prop-detail');
+}
+
+// NEEDS
+function saveNeeds() {
+  const client = document.getElementById('n-client').value.trim();
+  const type = document.getElementById('n-type').value;
+  if (!client || !type) { alert('顧客名と種別は必須です'); return; }
+  needs.unshift({
+    id: Date.now().toString(), createdAt: new Date().toISOString(), client, type,
+    contact: document.getElementById('n-contact').value.trim(),
+    staff: document.getElementById('n-staff').value.trim(),
+    area: document.getElementById('n-area').value.trim(),
+    price: document.getElementById('n-price').value.trim(),
+    yield_: document.getElementById('n-yield').value.trim(),
+    land: document.getElementById('n-land').value.trim(),
+    building: document.getElementById('n-building').value.trim(),
+    age: document.getElementById('n-age').value.trim(),
+    structure: document.getElementById('n-structure').value.trim(),
+    note: document.getElementById('n-note').value.trim(),
+  });
+  renderNeeds(); updateBadges(); closeModal('modal-needs-form');
+  ['n-client','n-contact','n-staff','n-area','n-price','n-yield','n-land','n-building','n-age','n-structure','n-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('n-type').value='';
+}
+
+function renderNeeds() {
+  const wrap = document.getElementById('needs-list-wrap');
+  if (!needs.length) {
+    wrap.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">物件リクエストが登録されていません</div><div class="empty-sub">「＋ リクエストを登録」から入力してください</div></div>`;
+    return;
+  }
+  wrap.innerHTML = `<table class="data-table"><thead><tr>
+    <th>法人名</th><th>連絡先</th><th>種別</th><th>エリア</th><th>価格帯</th><th>利回り</th><th>希望条件</th><th>担当</th><th>登録日</th><th></th>
+  </tr></thead><tbody>${needs.map(n=>`
+    <tr>
+      <td><div class="prop-name">${esc(n.client)}</div></td>
+      <td>${esc(n.contact||'—')}</td>
+      <td><span class="tag">${esc(n.type)}</span></td>
+      <td>${esc(n.area||'—')}</td>
+      <td style="white-space:nowrap">${esc(n.price||'—')}</td>
+      <td><span class="prop-yield">${esc(n.yield_||'—')}</span></td>
+      <td>${[n.land?`<span class="tag green">土地 ${esc(n.land)}</span>`:'',
+              n.building?`<span class="tag green">建物 ${esc(n.building)}</span>`:'',
+              n.age?`<span class="tag">${esc(n.age)}</span>`:'',
+              n.structure?`<span class="tag">${esc(n.structure)}</span>`:'',
+              n.note?`<span class="tag">${esc(n.note.slice(0,20))}${n.note.length>20?'…':''}</span>`:''].filter(Boolean).join('')||'—'}</td>
+      <td>${esc(n.staff||'—')}</td>
+      <td class="prop-date">${new Date(n.createdAt).toLocaleDateString('ja-JP')}</td>
+      <td><button class="btn-danger" onclick="deleteNeed('${n.id}',event)">削除</button></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function deleteNeed(id, e) {
+  e.stopPropagation();
+  if (confirm('このニーズを削除しますか？')) {
+    needs = needs.filter(n => n.id !== id);
+    renderNeeds(); updateBadges();
+  }
+}
+
+function updateBadges() {
+  document.getElementById('prop-badge').textContent = properties.length;
+  document.getElementById('needs-badge').textContent = needs.length;
+}
+</script>
+</body>
+</html>
